@@ -1,0 +1,19 @@
+# Cloud stack: API + DB (+ ML service inside backend for simplicity)
+services:
+  db:
+    image: postgres:16
+    env_file: .env
+    volumes: [dbdata:/var/lib/postgresql/data]
+    ports: ["5432:5432"]
+  backend:
+    build: ./backend
+    env_file: .env
+    depends_on: [db]
+    ports: ["8000:8000"]
+    volumes: ["./ml/models:/app/models:ro"]
+  web:
+    image: nginx:alpine
+    volumes: ["./web:/usr/share/nginx/html:ro"]
+    ports: ["8080:80"]
+volumes:
+  dbdata:

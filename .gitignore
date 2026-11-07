@@ -1,0 +1,60 @@
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Secrets & Environment Variables
+.env
+*.env
+!*.env.example
+secrets.h
+firmware/node/include/secrets.h
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Linting
+.pytest_cache/
+.coverage
+htmlcov/
+
+# PlatformIO
+.pio/
+.vscode/
+.idea/
+
+# SQLite & Databases
+*.sqlite
+*.sqlite3
+*.db
+
+# ML Data & Artifacts (keep structure via .gitkeep)
+# Large CSVs and trained models can be ignored or tracked if small
+ml/data/synthetic/*.csv
+ml/data/raw/*.csv
+!ml/data/synthetic/.gitkeep
+!ml/data/raw/.gitkeep
+!ml/models/.gitkeep
+!ml/notebooks/.gitkeep
