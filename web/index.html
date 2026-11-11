@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marine Pollution IoT - Giám Sát Ô Nhiễm Nước Biển Ven Bờ</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20viewBox=%220%200%20100%20100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+</head>
+<body>
+    <!-- Top Navigation Header -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">🌊</span>
+            <div class="brand-text">
+                <h1>HỆ THỐNG GIÁM SÁT Ô NHIỄM NƯỚC BIỂN VEN BỜ</h1>
+                <p class="brand-subtitle">IoT Edge Gateway • Machine Learning Anomaly Detection • Cloud Console (Group 7)</p>
+            </div>
+        </div>
+
+        <div class="nav-status-group">
+            <div id="connectionPill" class="status-pill connecting">
+                <span class="status-dot"></span>
+                <span id="connectionText">Đang kết nối...</span>
+            </div>
+            <button id="soundToggleBtn" class="icon-btn" title="Bật/Tắt chuông cảnh báo">
+                🔊 <span id="soundLabel">Âm thanh: Bật</span>
+            </button>
+            <div class="clock-display" id="clockDisplay">00:00:00 UTC</div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="dashboard-container">
+        
+        <!-- Live Alert Banner (hidden by default) -->
+        <div id="liveAlertBanner" class="alert-banner hidden">
+            <div class="banner-icon">🚨</div>
+            <div class="banner-content">
+                <h3 id="bannerTitle">CẢNH BÁO Ô NHIỄM NƯỚC BIỂN</h3>
+                <p id="bannerDesc">Phát hiện bất thường tại trạm quan trắc.</p>
+            </div>
+            <button class="banner-dismiss-btn" onclick="dismissBanner()">Đóng</button>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <section class="kpi-grid">
+            <div class="kpi-card" id="overallStatusCard">
+                <div class="kpi-header">
+                    <span class="kpi-title">Tình trạng môi trường</span>
+                    <span class="kpi-icon">🛡️</span>
+                </div>
+                <div class="kpi-value safe" id="kpiEnvStatus">BÌNH THƯỜNG</div>
+                <div class="kpi-desc" id="kpiEnvDesc">Các chỉ số nằm trong ngưỡng cho phép</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Trạm quan trắc</span>
+                    <span class="kpi-icon">📡</span>
+                </div>
+                <div class="kpi-value" id="kpiNodesOnline">2 / 2 Online</div>
+                <div class="kpi-desc">Node 01 (Ngoài khơi) & Node 02 (Cửa sông)</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Cảnh báo chưa xử lý</span>
+                    <span class="kpi-icon">⚠️</span>
+                </div>
+                <div class="kpi-value warning" id="kpiUnackAlerts">0</div>
+                <div class="kpi-desc">Sự cố ô nhiễm chờ kiểm tra</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Bản tin nhận được</span>
+                    <span class="kpi-icon">📈</span>
+                </div>
+                <div class="kpi-value" id="kpiTotalPackets">0</div>
+                <div class="kpi-desc">Luồng thời gian thực qua Gateway</div>
+            </div>
+        </section>
+
+        <!-- Node Switcher & Information Tabs -->
+        <section class="stations-section">
+            <div class="section-header">
+                <h2>📍 Vị Trí & Trạng Thái Trạm Quan Trắc</h2>
+                <div class="station-selector">
+                    <label>Chọn trạm hiển thị biểu đồ:</label>
+                    <button class="node-btn active" data-node="all" onclick="selectNode('all')">Tất cả trạm</button>
+                    <button class="node-btn" data-node="node01" onclick="selectNode('node01')">Node 01 (Ngoài khơi)</button>
+                    <button class="node-btn" data-node="node02" onclick="selectNode('node02')">Node 02 (Cửa sông)</button>
+                </div>
+            </div>
+
+            <div class="stations-cards-grid">
+                <!-- Node 01 Card -->
+                <div class="station-card" id="cardNode01">
+                    <div class="station-card-header">
+                        <div>
+                            <h3>Trạm Ngoài Khơi (Node 01)</h3>
+                            <span class="station-coords">16.0748° N, 108.2441° E • Bờ biển Đà Nẵng</span>
+                        </div>
+                        <span class="badge badge-online" id="statusBadgeNode01">ONLINE</span>
+                    </div>
+                    <div class="station-params-grid">
+                        <div class="param-box"><span class="param-label">pH:</span> <b id="valPhNode01">--</b></div>
+                        <div class="param-box"><span class="param-label">Độ đục:</span> <b id="valTurbNode01">-- NTU</b></div>
+                        <div class="param-box"><span class="param-label">TDS:</span> <b id="valTdsNode01">-- ppm</b></div>
+                        <div class="param-box"><span class="param-label">Nhiệt độ:</span> <b id="valTempNode01">-- °C</b></div>
+                        <div class="param-box"><span class="param-label">Sóng:</span> <b id="valRssiNode01">-- dBm</b></div>
+                        <div class="param-box"><span class="param-label">Màu nước:</span> <span id="colorSwatchNode01" class="color-swatch"></span></div>
+                    </div>
+                </div>
+
+                <!-- Node 02 Card -->
+                <div class="station-card" id="cardNode02">
+                    <div class="station-card-header">
+                        <div>
+                            <h3>Trạm Cửa Sông (Node 02)</h3>
+                            <span class="station-coords">16.0585° N, 108.2312° E • Cửa sông Hàn / Vịnh</span>
+                        </div>
+                        <span class="badge badge-online" id="statusBadgeNode02">ONLINE</span>
+                    </div>
+                    <div class="station-params-grid">
+                        <div class="param-box"><span class="param-label">pH:</span> <b id="valPhNode02">--</b></div>
+                        <div class="param-box"><span class="param-label">Độ đục:</span> <b id="valTurbNode02">-- NTU</b></div>
+                        <div class="param-box"><span class="param-label">TDS:</span> <b id="valTdsNode02">-- ppm</b></div>
+                        <div class="param-box"><span class="param-label">Nhiệt độ:</span> <b id="valTempNode02">-- °C</b></div>
+                        <div class="param-box"><span class="param-label">Sóng:</span> <b id="valRssiNode02">-- dBm</b></div>
+                        <div class="param-box"><span class="param-label">Màu nước:</span> <span id="colorSwatchNode02" class="color-swatch"></span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-time Charts (2x2 Grid) -->
+        <section class="charts-section">
+            <div class="section-header">
+                <h2>📊 Biểu Đồ Giám Sát Cảm Biến Thời Gian Thực</h2>
+                <div class="chart-controls">
+                    <button class="time-range-btn active" onclick="setTimeLimit(20)">20 điểm</button>
+                    <button class="time-range-btn" onclick="setTimeLimit(50)">50 điểm</button>
+                    <button class="time-range-btn" onclick="setTimeLimit(100)">100 điểm</button>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Chart 1: pH -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Độ pH (Ngưỡng an toàn QCVN: 6.5 – 8.5)</h3>
+                        <span class="param-badge ph-badge">pH</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartPh"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Turbidity -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Độ Đục Nước (Turbidity)</h3>
+                        <span class="param-badge turb-badge">NTU</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartTurbidity"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: TDS -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Tổng Chất Rắn Hòa Tan / Độ Mặn (TDS)</h3>
+                        <span class="param-badge tds-badge">ppm</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartTds"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Temperature -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Nhiệt Độ Nước Biển (Water Temp)</h3>
+                        <span class="param-badge temp-badge">°C</span>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartTemp"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts and Anomaly Table -->
+        <section class="alerts-section">
+            <div class="section-header">
+                <h2>⚠️ Danh Sách Sự Cố Ô Nhiễm & Cảnh Báo Machine Learning</h2>
+                <div>
+                    <button class="refresh-btn" onclick="loadAlerts()">🔄 Tải lại</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="alerts-table" id="alertsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Thời gian</th>
+                            <th>Trạm</th>
+                            <th>Nguyên nhân nghi ngờ (ML)</th>
+                            <th>Độ tin cậy</th>
+                            <th>Thông số đo</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center empty-state">Đang nạp dữ liệu cảnh báo...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>Đồ án Hệ Thống IoT Giám Sát Ô Nhiễm Nước Biển Ven Bờ • Nhóm 7</p>
+        <p class="footer-tech">ESP32 • Mosquitto MQTT • Python Gateway • FastAPI • PostgreSQL • Scikit-Learn • Chart.js</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

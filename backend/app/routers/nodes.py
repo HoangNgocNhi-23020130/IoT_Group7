@@ -102,3 +102,4 @@ def register_or_update_node(payload: NodeCreate, db: Session = Depends(get_db)) 
         status=node.status,
         latest_measurement=None,
     )
+

@@ -54,3 +54,4 @@ def get_latest_measurements(db: Session = Depends(get_db)) -> List[MeasurementOu
             results.append(latest)
 
     return results
+

@@ -69,3 +69,4 @@ async def send_telegram_alert(alert_data: Dict[str, Any]) -> bool:
     except Exception as e:
         logger.error(f"Failed to deliver Telegram notification: {e}")
         return False
+

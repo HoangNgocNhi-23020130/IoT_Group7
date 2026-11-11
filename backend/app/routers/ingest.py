@@ -155,3 +155,4 @@ async def ingest_telemetry(
         alerts_triggered=len(alerts_created),
         alerts=alerts_created,
     )
+

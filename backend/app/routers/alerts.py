@@ -46,3 +46,4 @@ def acknowledge_alert(alert_id: int, db: Session = Depends(get_db)) -> AlertAckR
     db.commit()
 
     return AlertAckResponse(alert_id=alert.id, acknowledged=True)
+
