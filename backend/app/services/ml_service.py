@@ -76,10 +76,24 @@ class MLService:
             self.is_loaded = False
             return False
 
+    def _normalize_record(self, m: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensure color_r, color_g, color_b exist, flattening nested color if needed."""
+        norm = dict(m)
+        if "color" in norm and isinstance(norm["color"], dict):
+            c = norm["color"]
+            norm.setdefault("color_r", c.get("r", 0))
+            norm.setdefault("color_g", c.get("g", 0))
+            norm.setdefault("color_b", c.get("b", 0))
+        norm.setdefault("color_r", 0)
+        norm.setdefault("color_g", 0)
+        norm.setdefault("color_b", 0)
+        return norm
+
     def _extract_features(self, node_id: str, current: Dict[str, Any]) -> pd.DataFrame:
         """Extract physics-informed features using recent history for differential metrics."""
+        norm_current = self._normalize_record(current)
         history_list = list(self.node_history[node_id])
-        full_records = history_list + [current]
+        full_records = history_list + [norm_current]
 
         df = pd.DataFrame(full_records)
 
@@ -154,13 +168,13 @@ class MLService:
             if cause != "normal" and confidence >= 60.0:
                 is_anomaly = True
 
-            # Append current to history
-            self.node_history[node_id].append(measurement)
+            # Append normalized current to history
+            self.node_history[node_id].append(self._normalize_record(measurement))
             return is_anomaly, cause, round(confidence, 1)
 
         except Exception as e:
             logger.error(f"Error during ML inference: {e}")
-            self.node_history[node_id].append(measurement)
+            self.node_history[node_id].append(self._normalize_record(measurement))
             return self._fallback_rule_based(measurement)
 
     def _fallback_rule_based(self, m: Dict[str, Any]) -> Tuple[bool, str, float]:

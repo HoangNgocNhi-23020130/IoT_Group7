@@ -15,5 +15,21 @@ services:
     image: nginx:alpine
     volumes: ["./web:/usr/share/nginx/html:ro"]
     ports: ["8080:80"]
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883"]
+    volumes:
+      - ./gateway/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+  gateway:
+    build:
+      context: ./gateway
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: 1883
+      CLOUD_INGEST_URL: http://backend:8000/api/v1/ingest
+      GATEWAY_API_KEY: marine_secret_key_2026
+    depends_on:
+      - mosquitto
+      - backend
 volumes:
   dbdata:
