@@ -1,0 +1,13 @@
+{
+  "projectId": "72852408",
+  "functions": {
+    "device-ingest": {
+      "hasChanged": false,
+      "hash": "672616ebd41bf937f1daa33171e68738d6f9a17660c1db1bbd6f833a9269e2de"
+    },
+    "ai-analysis": {
+      "hasChanged": false,
+      "hash": "e7a36188db6406cc86033dc1d390f852447d3554d55d0230177482cdf0089bb6"
+    }
+  }
+}
